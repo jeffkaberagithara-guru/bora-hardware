@@ -1,0 +1,294 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   BORA HARDWARE — DESIGN TOKENS
+   Source of truth mirrors DESIGN.md §4–§10. No raw hex values in components.
+   ========================================================================= */
+
+@theme {
+  /* --- Colour: primary (trust / interactive) --- */
+  --color-primary: #0b63ce;
+  --color-primary-hover: #0a57b4;
+  --color-primary-strong: #084a9e;
+  --color-primary-soft: #eef4fd;
+
+  /* --- Colour: accent (single highest-value action only) --- */
+  --color-accent: #f59a23;
+  --color-accent-hover: #dc8708;
+  --color-accent-ink: #151719;
+  --color-accent-deep: #8a4b04;
+  --color-accent-soft: #fdf4e4;
+  /* Amber lightened for use AS TEXT on primary / primary-strong.
+     Verified: 4.71:1 on #0b63ce, 7.00:1 on #084a9e. Raw --color-accent is
+     only 2.58:1 / 3.84:1 on those fills and must not be used for type. */
+  --color-accent-on-dark: #fde8b4;
+
+  /* --- Colour: surfaces & ink --- */
+  --color-background: #ffffff;
+  --color-surface: #f6f7f8;
+  --color-surface-2: #eceef0;
+  --color-text: #151719;
+  --color-text-secondary: #454b51;
+  --color-muted: #686f75;
+  --color-border: #e3e6e8;
+  --color-border-strong: #c9cfd4;
+
+  /* --- Colour: status --- */
+  --color-success: #16794c;
+  --color-success-soft: #eaf5ef;
+  --color-danger: #b3261e;
+  --color-danger-soft: #fdecea;
+
+  /* --- Focus (DESIGN.md §12) --- */
+  --color-focus: #0b63ce;
+
+  /* --- Typography --- */
+  --font-display: var(--font-archivo), "Arial Narrow", system-ui, sans-serif;
+  --font-sans: var(--font-plex-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  /* --- Type scale (DESIGN.md §5.1) --- */
+  --text-display: clamp(2.75rem, 6.4vw, 5.25rem);
+  --text-display--line-height: 0.94;
+  --text-display--letter-spacing: -0.03em;
+  --text-display--font-weight: 800;
+
+  --text-h1: clamp(2rem, 3.6vw, 2.875rem);
+  --text-h1--line-height: 1.06;
+  --text-h1--letter-spacing: -0.025em;
+  --text-h1--font-weight: 750;
+
+  --text-h2: clamp(1.5rem, 2.4vw, 2rem);
+  --text-h2--line-height: 1.14;
+  --text-h2--letter-spacing: -0.02em;
+  --text-h2--font-weight: 700;
+
+  --text-h3: 1.1875rem;
+  --text-h3--line-height: 1.3;
+  --text-h3--letter-spacing: -0.01em;
+  --text-h3--font-weight: 650;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-body-lg: 1.0625rem;
+  --text-body-lg--line-height: 1.65;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.5;
+  --text-nav: 0.9375rem;
+  --text-nav--font-weight: 500;
+  --text-button: 0.9375rem;
+  --text-button--font-weight: 600;
+
+  --text-caption: 0.6875rem;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: 0.14em;
+  --text-caption--font-weight: 500;
+
+  --text-price: 1.1875rem;
+  --text-price--line-height: 1.1;
+  --text-price--letter-spacing: -0.015em;
+  --text-price--font-weight: 700;
+
+  --text-price-lg: 1.75rem;
+  --text-price-lg--line-height: 1.05;
+  --text-price-lg--letter-spacing: -0.025em;
+  --text-price-lg--font-weight: 750;
+
+  --text-unit-price: 0.75rem;
+  --text-unit-price--line-height: 1.4;
+
+  /* --- Geometry: near-square. Hardware is machined, not inflated. --- */
+  --radius-xs: 2px;
+  --radius-card: 3px;
+  --radius-panel: 4px;
+  --radius-pill: 999px;
+
+  /* --- Spacing rhythm --- */
+  --spacing-gutter: clamp(1rem, 4vw, 2.5rem);
+  --spacing-section: clamp(3.5rem, 7vw, 6rem);
+  --spacing-section-sm: clamp(2.5rem, 5vw, 3.75rem);
+
+  /* --- Elevation: hairlines over shadows --- */
+  --shadow-lift: 0 1px 2px rgb(21 23 25 / 0.05), 0 8px 20px -12px rgb(21 23 25 / 0.18);
+  --shadow-overlay: 0 12px 40px -12px rgb(21 23 25 / 0.28);
+
+  /* --- Breakpoints --- */
+  --breakpoint-xs: 22.5rem;
+
+  /* --- Layout --- */
+  --container-site: 82.5rem;
+}
+
+/* ============================================================================
+   MOTION TOKENS (DESIGN.md §10)
+   ========================================================================= */
+:root {
+  --motion-fast: 140ms;
+  --motion-standard: 220ms;
+  --motion-emphasis: 420ms;
+  --motion-entrance: 620ms;
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+
+  /* Layout constants consumed by both CSS and JS */
+  --header-h: 4rem;
+  --announce-h: 2rem;
+}
+
+/* ============================================================================
+   BASE
+   ========================================================================= */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-variation-settings: "wdth" 100;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Visible focus everywhere. Never removed. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+
+  /* Tabular figures for every price and spec number. Hardware is read as a
+     column of numbers — alignment is functional, not decorative. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Hide scrollbar on horizontal rails without losing scrollability */
+  .no-bar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-bar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer components {
+  /* Page gutter + max width used by every full-width section */
+  .shell {
+    width: 100%;
+    max-width: var(--container-site);
+    margin-inline: auto;
+    padding-inline: var(--spacing-gutter);
+  }
+
+  /* Eyebrow label: mono, uppercase, tracked out */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  /* Keyframes used by overlays. Short and single-purpose — no ambient loops. */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes dialogIn {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes panelInRight {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes panelOutRight {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Screen-reader-only */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION (DESIGN.md §10.1)
+   Functionality must be identical; only movement is removed.
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
