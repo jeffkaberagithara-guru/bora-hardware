@@ -72,15 +72,16 @@ creates the STK push; the UI already matches that flow.
 ## Verification
 
 ```bash
-npm run audit            # build + structure + contrast + layout
+npm run audit            # build + structure + contrast + layout + focus
 npm run audit:structure  # headings, landmarks, alt text, accessible names, no raw hex
 npm run audit:contrast   # WCAG ratios + DESIGN §4.1 ↔ globals.css token parity
 npm run audit:layout     # headless Chrome: overflow 320–1920, touch targets, reduced motion
+npm run audit:focus      # headless Chrome: focus rings, dialog focus restore, link integrity
 npm run typecheck
 ```
 
-`audit:layout` starts its own `next start` on port 3113 and closes it afterwards
-(`AUDIT_BASE_URL` to reuse a server, `BROWSER_PATH` to pick the browser).
+`audit:layout` (port 3113) and `audit:focus` (port 3114) start their own `next start` and
+close it afterwards — set `AUDIT_BASE_URL` to reuse a server, `BROWSER_PATH` to pick the browser.
 
 ## Layout
 

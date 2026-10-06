@@ -385,7 +385,7 @@ All catalogue content is clearly sample data pending real inventory, documented 
 
 ## 16. Verification Checklist
 
-Script-checked — run `npm run audit` (build + three scripts):
+Script-checked — run `npm run audit` (build + four scripts):
 
 - [x] Contrast computed and asserted by script, not by eye — `scripts/audit-contrast.mjs`
 - [x] Token parity between §4.1 and `app/globals.css` — same script
@@ -397,9 +397,10 @@ Script-checked — run `npm run audit` (build + three scripts):
       overlays (mobile menu, search, cart) opened at 390px
 - [x] `prefers-reduced-motion` leaves nothing hidden and nothing animating > 50ms — same
       script, emulated media
+- [x] Focus-visible on every tab stop, focus moving into each dialog and back to its trigger
+      on Escape, and every internal link resolving — `scripts/audit-focus.mjs`
 - [x] Empty cart, empty search, empty catalogue, empty checkout and 404 states designed
 
 Not scriptable — browser only, and **to be re-run for every new route**:
 
-- [ ] Focus-visible on every interactive element, verified by keyboard traversal
-- [ ] Screen-reader semantics reviewed (announcements, dialog focus restore)
+- [ ] Screen-reader semantics reviewed (announcements, live regions, heading announcement)

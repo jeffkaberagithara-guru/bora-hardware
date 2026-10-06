@@ -39,12 +39,16 @@ export function SearchDialog({
       setQuery("");
       return;
     }
+    // Whoever opened the dialog gets it back when it closes — otherwise focus
+    // falls to <body> and a keyboard user has to Tab in from the top again.
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const focusTimer = setTimeout(() => inputRef.current?.focus(), 60);
     const { overflow } = document.body.style;
     document.body.style.overflow = "hidden";
     return () => {
       clearTimeout(focusTimer);
       document.body.style.overflow = overflow;
+      opener?.focus();
     };
   }, [open]);
 
@@ -112,7 +116,7 @@ export function SearchDialog({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search drills, cable, cement…"
             autoComplete="off"
-            className="h-14 min-w-0 flex-1 bg-transparent text-body outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:appearance-none"
+            className="h-14 min-w-0 flex-1 bg-transparent text-body placeholder:text-muted [&::-webkit-search-cancel-button]:appearance-none"
           />
           <button
             type="button"
