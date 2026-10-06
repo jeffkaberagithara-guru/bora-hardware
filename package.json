@@ -10,7 +10,8 @@
     "audit:contrast": "node scripts/audit-contrast.mjs",
     "audit:structure": "node scripts/audit-structure.mjs",
     "audit:layout": "node scripts/audit-layout.mjs",
-    "audit": "npm run build && npm run audit:structure && npm run audit:contrast && npm run audit:layout"
+    "audit:focus": "node scripts/audit-focus.mjs",
+    "audit": "npm run build && npm run audit:structure && npm run audit:contrast && npm run audit:layout && npm run audit:focus"
   },
   "dependencies": {
     "lucide-react": "^1.52.0",

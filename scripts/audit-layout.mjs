@@ -18,15 +18,10 @@
  * Exits non-zero on any failure.
  */
 
-import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
-import puppeteer from "puppeteer-core";
+import { ensureServer, launchBrowser } from "./lib/headless.mjs";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = 3113;
-const BASE = process.env.AUDIT_BASE_URL ?? `http://localhost:${PORT}`;
+let BASE = process.env.AUDIT_BASE_URL ?? `http://localhost:${PORT}`;
 
 const ROUTES = [
   "/",
@@ -48,58 +43,6 @@ const fail = (message) => {
   failures += 1;
   console.log(` FAIL ${message}`);
 };
-
-const browserPath = () => {
-  if (process.env.BROWSER_PATH) return process.env.BROWSER_PATH;
-  const candidates =
-    process.platform === "win32"
-      ? [
-          "C:/Program Files/Google/Chrome/Application/chrome.exe",
-          "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
-          "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
-          "C:/Program Files/Microsoft/Edge/Application/msedge.exe",
-        ]
-      : process.platform === "darwin"
-        ? ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"]
-        : ["/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/microsoft-edge"];
-  const found = candidates.find((path) => existsSync(path));
-  if (!found) throw new Error("No Chrome/Edge found — set BROWSER_PATH.");
-  return found;
-};
-
-/** Starts a production server unless one is already answering. */
-async function ensureServer() {
-  try {
-    if ((await fetch(BASE, { signal: AbortSignal.timeout(1500) })).ok) {
-      console.warn(
-        `⚠ ${BASE} is already answering — reusing it. Rebuild first if the source changed.`,
-      );
-      return null;
-    }
-  } catch {
-    /* not running — start one */
-  }
-  console.log(`Starting next start on ${PORT}…`);
-  // Spawned directly (not through npx/shell) so `kill()` reaches the actual
-  // node process — killing a cmd.exe wrapper leaves an orphaned server behind
-  // holding the port, which then serves a stale build to the next run.
-  const child = spawn(
-    process.execPath,
-    [join(root, "node_modules", "next", "dist", "bin", "next"), "start", "-p", String(PORT)],
-    { cwd: root, stdio: "ignore", windowsHide: true },
-  );
-  child.on("error", () => {});
-  for (let i = 0; i < 60; i += 1) {
-    await new Promise((r) => setTimeout(r, 500));
-    try {
-      if ((await fetch(BASE, { signal: AbortSignal.timeout(1000) })).ok) return child;
-    } catch {
-      /* not up yet */
-    }
-  }
-  child.kill();
-  throw new Error("Server did not start.");
-}
 
 /* ---------------------------------------------------------------- pages */
 
@@ -297,12 +240,9 @@ async function auditOverlays(page) {
 
 /* ------------------------------------------------------------------ run */
 
-const server = await ensureServer();
-const browser = await puppeteer.launch({
-  executablePath: browserPath(),
-  headless: true,
-  args: ["--no-sandbox", "--disable-dev-shm-usage"],
-});
+const server = await ensureServer(PORT);
+BASE = server.base;
+const browser = await launchBrowser();
 
 console.log(`Layout audit: ${ROUTES.length} routes × ${WIDTHS.length} widths\n`);
 
@@ -349,7 +289,7 @@ try {
   }
 } finally {
   await browser.close();
-  if (server) server.kill();
+  if (server.child) server.child.kill();
 }
 
 console.log(
