@@ -11,10 +11,12 @@ import { cn } from "@/lib/cn";
  * Eight lines, four across on desktop. Deliberately not twelve: a longer grid
  * would push the categories and the value argument below the fold, and the
  * priority order is product clarity before everything else. Eight is enough to
- * show the range of units on offer without becoming a paginated table.
+ * show the range of units on offer without becoming a paginated table — so the
+ * slice is here rather than left to the catalogue's `featured` count, which
+ * grows as the sample data grows.
  */
 export function FeaturedProducts() {
-  const featured = featuredProducts();
+  const featured = featuredProducts().slice(0, 8);
 
   return (
     <section aria-labelledby="featured-heading" className="bg-background">
