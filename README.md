@@ -24,18 +24,28 @@ npx tsc --noEmit   # type check only
 | `/` | Home: hero, trust strip, featured lines, departments, value argument, store, order CTA |
 | `/shop` | Full catalogue with department rail and sort |
 | `/shop/[category]` | One department |
+| `/search` | Results page: GET form, relevance sort, empty state |
 | `/product/[id]` | Product detail with spec table and a sticky mobile buy bar |
 | `/checkout` | Order summary → WhatsApp handoff to the counter |
 | `/contact` | Call / WhatsApp / email, plus `#delivery` (delivery & payment) |
 | `/about` | How the business works, department index |
 
-All routes are statically generated (`generateStaticParams` from the catalogue).
+Every route except `/search` is statically generated (`generateStaticParams` from the catalogue).
+`/search` reads `searchParams`, so it is rendered per request and excluded from `robots.txt`.
+
+### Search engines and sharing
+
+`app/robots.ts` and `app/sitemap.ts` are generated from the catalogue; product and category pages
+carry JSON-LD (`HardwareStore`, `Product` with a unit-price `UnitPriceSpecification`, and
+breadcrumb lists) from `components/seo/`. Share cards use the branded 1200×630 `public/img/og-cover.jpg`
+— regenerate it after changing design tokens with `npm run og`.
 
 ## ⚠️ Sample data
 
 **Everything in `data/` is sample content pending real inventory.** Prices are representative
 Kenyan retail prices, product names and specifications are illustrative, and images are stock
-photography in `public/img/`. The footer says so on every page. Replace `data/products.ts`,
+photography in `public/img/` (most product photos are derived frames of those shots, scripted by
+`npm run derive-images`). The footer says so on every page. Replace `data/products.ts`,
 `data/categories.ts` and the images before taking real orders.
 
 Business contact details in `config/site.ts` are **placeholders** and are environment-overridable
@@ -78,18 +88,23 @@ npm run audit:contrast   # WCAG ratios + DESIGN §4.1 ↔ globals.css token pari
 npm run audit:layout     # headless Chrome: overflow 320–1920, touch targets, reduced motion
 npm run audit:focus      # headless Chrome: focus rings, dialog focus restore, link integrity
 npm run typecheck
+npm run og               # regenerate public/img/og-cover.jpg from the current tokens
+npm run derive-images    # regenerate derived product photos from their source frames
 ```
 
-`audit:layout` (port 3113) and `audit:focus` (port 3114) start their own `next start` and
-close it afterwards — set `AUDIT_BASE_URL` to reuse a server, `BROWSER_PATH` to pick the browser.
+`audit:structure` reads the prerendered HTML in `.next/server/app` and additionally live-fetches
+`/search` (it is never prerendered). `audit:layout` (port 3113) and `audit:focus` (port 3114)
+start their own `next start` and close it afterwards — set `AUDIT_BASE_URL` to reuse a server,
+`BROWSER_PATH` to pick the browser.
 
 ## Layout
 
 ```
-app/            routes (RSC) + globals.css + not-found
-components/     ui/, home/, cart/, shop/, product/, checkout/
+app/            routes (RSC) + globals.css + not-found + robots/sitemap
+components/     ui/, home/, cart/, shop/, product/, checkout/, seo/
 config/site.ts  business details, environment-overridable
 data/           products.ts, categories.ts  ← SAMPLE DATA
+scripts/        audit: structure, contrast, layout, focus + og/derive-image tools
 lib/            currency, search, cn
 DESIGN.md       design system: tokens, components, motion, a11y rules
 ```
