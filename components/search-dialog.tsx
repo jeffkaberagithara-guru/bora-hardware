@@ -73,7 +73,7 @@ export function SearchDialog({
 
   const submit = () => {
     if (!trimmed) return;
-    go(`/shop?q=${encodeURIComponent(query.trim())}`);
+    go(`/search?q=${encodeURIComponent(query.trim())}`);
   };
 
   if (!open) return null;

@@ -57,6 +57,9 @@ export function searchCatalogue(query: string, limit = 8): SearchResults {
     .map(({ c }) => ({ id: c.id, name: c.name, count: products.filter((p) => p.categoryId === c.id).length }));
 
   return {
+    // `total` is the untruncated count — the dialog shows how many matches
+    // exist behind its eight rows; the results page passes `Infinity` as its
+    // limit and so sees every match.
     products: matched.slice(0, limit),
     categories: matchedCats.slice(0, 4),
     total: matched.length,

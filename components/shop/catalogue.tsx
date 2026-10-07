@@ -22,7 +22,7 @@ import { cn } from "@/lib/cn";
  * shareable and indexable; only the sort order is local state, because it
  * re-orders what is already on the page rather than selecting a different set.
  */
-type SortKey = "featured" | "price-asc" | "price-desc" | "name";
+type SortKey = "relevance" | "featured" | "price-asc" | "price-desc" | "name";
 
 const SORTS: { value: SortKey; label: string }[] = [
   { value: "featured", label: "Featured" },
@@ -31,9 +31,17 @@ const SORTS: { value: SortKey; label: string }[] = [
   { value: "name", label: "Name, A–Z" },
 ];
 
+/** Search results are handed over in relevance order, so it needs its own. */
+export const SEARCH_SORTS: { value: SortKey; label: string }[] = [
+  { value: "relevance", label: "Relevance" },
+  ...SORTS.filter((option) => option.value !== "featured"),
+];
+
 function sortProducts(products: Product[], sort: SortKey): Product[] {
   const list = [...products];
   switch (sort) {
+    case "relevance":
+      return list;
     case "price-asc":
       return list.sort((a, b) => a.price - b.price);
     case "price-desc":
@@ -48,11 +56,22 @@ function sortProducts(products: Product[], sort: SortKey): Product[] {
 export function Catalogue({
   products,
   activeCategory,
+  showDepartments = true,
+  sorts = SORTS,
+  defaultSort = "featured",
+  countLabel,
 }: {
   products: Product[];
   activeCategory: string | null;
+  /** The department rail — off on `/search`, where a chip would imply the
+      results are a department rather than a query. */
+  showDepartments?: boolean;
+  sorts?: { value: SortKey; label: string }[];
+  defaultSort?: SortKey;
+  /** Replaces the "N lines" heading, e.g. "12 results for “cement”". */
+  countLabel?: string;
 }) {
-  const [sort, setSort] = useState<SortKey>("featured");
+  const [sort, setSort] = useState<SortKey>(defaultSort);
   const sorted = useMemo(() => sortProducts(products, sort), [products, sort]);
 
   return (
@@ -65,8 +84,12 @@ export function Catalogue({
               the count, which is also the most useful thing to label the grid
               with: how many lines you are looking at. */}
           <h2 className="eyebrow text-muted" aria-live="polite">
-            {products.length} {products.length === 1 ? "line" : "lines"}
-            {activeCategory && " in this department"}
+            {countLabel ?? (
+              <>
+                {products.length} {products.length === 1 ? "line" : "lines"}
+                {activeCategory && " in this department"}
+              </>
+            )}
           </h2>
 
           <div className="flex items-center gap-2">
@@ -80,7 +103,7 @@ export function Catalogue({
                 onChange={(event) => setSort(event.target.value as SortKey)}
                 className="h-11 appearance-none rounded-xs border border-border-strong bg-background py-0 pl-3 pr-9 text-[length:var(--text-nav)] text-text transition-colors duration-[var(--motion-fast)] hover:border-text"
               >
-                {SORTS.map((option) => (
+                {sorts.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -98,20 +121,22 @@ export function Catalogue({
         {/* Department rail. A horizontal scroller below md — seven chips do not
             fit a 360px viewport, and hiding them would hide the catalogue's
             structure. */}
-        <ul className="no-bar -mx-1 flex items-center gap-1.5 overflow-x-auto px-1">
-          <li>
-            <Chip href="/shop" active={activeCategory === null}>
-              All products
-            </Chip>
-          </li>
-          {categories.map((category) => (
-            <li key={category.id}>
-              <Chip href={`/shop/${category.id}`} active={activeCategory === category.id}>
-                {category.name}
+        {showDepartments && (
+          <ul className="no-bar -mx-1 flex items-center gap-1.5 overflow-x-auto px-1">
+            <li>
+              <Chip href="/shop" active={activeCategory === null}>
+                All products
               </Chip>
             </li>
-          ))}
-        </ul>
+            {categories.map((category) => (
+              <li key={category.id}>
+                <Chip href={`/shop/${category.id}`} active={activeCategory === category.id}>
+                  {category.name}
+                </Chip>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* --------------------------------------------------------------- grid */}
