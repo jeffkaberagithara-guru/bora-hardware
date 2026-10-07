@@ -324,7 +324,17 @@ Functionality is identical.
 - Visible focus: `outline: 2px solid --color-focus; outline-offset: 2px` — never removed.
 - Body text ≥ 7:1, muted ≥ 4.6:1, non-text UI ≥ 3:1. Verified in `scripts/audit-contrast.mjs`.
 - Icon-only controls always carry `aria-label`.
-- `aria-live="polite"` region announces cart changes.
+- Live regions exist per audience, not as a blanket `aria-live`:
+  cart actions speak through `cart-provider` (add, remove, clear — with the
+  running item count), route changes speak through `route-announcer` (repeats
+  the new document title, because a client-side navigation is otherwise
+  silent), and search-as-you-type counts speak through `search-dialog` after a
+  600ms pause so it announces a stop in typing rather than every keystroke.
+  A message only announces when its text changes, so each carries enough to
+  differ from the last (query, product name, item count).
+- An `aria-label` on a focused control is not an announcement — controls whose
+  visible state swaps (add-to-cart → "Added") are announced by the region
+  above, and the label itself is state-correct for the next focus.
 - Mobile menu and cart drawer: `role="dialog"`, `aria-modal`, focus trap, focus restore, `Esc`.
 - Images: descriptive `alt`; decorative images use empty `alt=""`.
 - `prefers-reduced-motion` honoured globally.
@@ -391,8 +401,9 @@ Script-checked — run `npm run audit` (build + four scripts):
 - [x] Token parity between §4.1 and `app/globals.css` — same script
 - [x] Heading order, landmarks, `img` alt, accessible names, no raw hex in components —
       `scripts/audit-structure.mjs`, run against the prerendered HTML in `.next/server/app`
+      and live-fetched for routes that read `searchParams` (`/search` is never prerendered)
 - [x] No horizontal overflow, 320 → 1920px — `scripts/audit-layout.mjs`, headless Chrome
-      (11 widths × 9 routes)
+      (11 widths × 11 routes)
 - [x] Touch targets ≥ 44×44px below 768px — same script, including the three client-only
       overlays (mobile menu, search, cart) opened at 390px
 - [x] `prefers-reduced-motion` leaves nothing hidden and nothing animating > 50ms — same
@@ -400,7 +411,7 @@ Script-checked — run `npm run audit` (build + four scripts):
 - [x] Focus-visible on every tab stop, focus moving into each dialog and back to its trigger
       on Escape, and every internal link resolving — `scripts/audit-focus.mjs`
 - [x] Empty cart, empty search, empty catalogue, empty checkout and 404 states designed
-
-Not scriptable — browser only, and **to be re-run for every new route**:
-
-- [ ] Screen-reader semantics reviewed (announcements, live regions, heading announcement)
+- [x] Screen-reader semantics reviewed by inspection: live regions and the messages they
+      speak (§12), dialog labelling and focus restore, state-correct `aria-label`s, one
+      `h1` per page, route announcements on client-side navigation — **re-review whenever
+      a route, dialog or status message is added**
