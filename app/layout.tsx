@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { AnnouncementBar } from "@/components/announcement-bar";
 import { Navbar } from "@/components/navbar";
+import { RouteAnnouncer } from "@/components/route-announcer";
 import { Footer } from "@/components/ui/footer";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { CartDrawer } from "@/components/cart/cart-drawer";
@@ -113,6 +114,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <Footer />
           <CartDrawer />
+          <RouteAnnouncer />
         </CartProvider>
       </body>
     </html>

@@ -57,10 +57,17 @@ export function AddToCartButton({
       type="button"
       disabled={out}
       onClick={() => add(product.id, qty)}
+      /* The label carries the state rather than an inner `sr-only` span:
+         `aria-label` overrides the subtree, so text inside the button would
+         never be read back. The confirmation itself is spoken by the cart's
+         live region (see cart-provider), which is the only reliable place for
+         an announcement. */
       aria-label={
         out
           ? `${product.name} is out of stock`
-          : `Add ${product.name} to cart`
+          : flash
+            ? `${product.name} added to cart`
+            : `Add ${qty > 1 ? `${qty} × ` : ""}${product.name} to cart`
       }
       className={cn(
         "group/add inline-flex items-center justify-center gap-1.5 rounded-xs border font-[length:var(--text-button)]",
@@ -80,7 +87,6 @@ export function AddToCartButton({
         <>
           <Check className="size-4 shrink-0" strokeWidth={2.5} aria-hidden />
           {showLabel && <span>Added</span>}
-          <span className="sr-only"> — {product.name} added to cart</span>
         </>
       ) : out ? (
         <>
@@ -95,7 +101,6 @@ export function AddToCartButton({
             aria-hidden
           />
           {showLabel && <span>Add</span>}
-          <span className="sr-only"> {product.name} — {qty} to cart</span>
         </>
       )}
     </button>

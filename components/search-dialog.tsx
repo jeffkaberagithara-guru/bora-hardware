@@ -25,6 +25,7 @@ export function SearchDialog({
   onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
+  const [announcement, setAnnouncement] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -33,6 +34,30 @@ export function SearchDialog({
 
   const results = searchCatalogue(query);
   const trimmed = query.trim().length > 0;
+
+  /**
+   * Result count for screen readers.
+   *
+   * Results appear as the customer types, so an immediate announcement would
+   * interrupt mid-word; a 600ms pause means "they have stopped to listen".
+   * The query is part of the message so two searches that happen to return
+   * the same number of hits still produce a change in the live region.
+   */
+  useEffect(() => {
+    if (!open || !trimmed) {
+      setAnnouncement("");
+      return;
+    }
+    const timer = setTimeout(() => {
+      const q = query.trim();
+      setAnnouncement(
+        results.total === 0
+          ? `No results for ${q}`
+          : `${results.total} result${results.total === 1 ? "" : "s"} for ${q}`,
+      );
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [open, trimmed, query, results.total]);
 
   useEffect(() => {
     if (!open) {
@@ -100,6 +125,9 @@ export function SearchDialog({
         <h2 id={labelId} className="sr-only">
           Search the catalogue
         </h2>
+        <p role="status" aria-live="polite" className="sr-only">
+          {announcement}
+        </p>
 
         <form
           onSubmit={(e) => {

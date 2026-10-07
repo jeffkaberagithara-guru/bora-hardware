@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Product } from "@/data/products";
+import { getProduct } from "@/data/products";
 
 /**
  * Cart state.
@@ -89,6 +90,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [justAdded, setJustAdded] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  /** Spoken confirmation for cart actions the buttons themselves cannot
+      announce — an `aria-label` on a focused control is not a live region. */
+  const [status, setStatus] = useState("");
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -124,29 +128,53 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [lines, isHydrated]);
 
-  const add = useCallback((id: string, qty = 1) => {
-    dispatch({ type: "add", id, qty, at: Date.now() });
-    setJustAdded(id);
-    if (confirmTimer.current) clearTimeout(confirmTimer.current);
-    confirmTimer.current = setTimeout(() => setJustAdded(null), 1400);
-  }, []);
+  const count = lines.reduce((n, l) => n + l.qty, 0);
+
+  const add = useCallback(
+    (id: string, qty = 1) => {
+      dispatch({ type: "add", id, qty, at: Date.now() });
+      setJustAdded(id);
+      const product = getProduct(id);
+      if (product) {
+        const total = count + qty;
+        setStatus(
+          `${product.name} added to cart — ${total} item${total === 1 ? "" : "s"} in cart.`,
+        );
+      }
+      if (confirmTimer.current) clearTimeout(confirmTimer.current);
+      confirmTimer.current = setTimeout(() => setJustAdded(null), 1400);
+    },
+    [count],
+  );
 
   const setQty = useCallback((id: string, qty: number) => dispatch({ type: "setQty", id, qty }), []);
-  const remove = useCallback((id: string) => dispatch({ type: "remove", id }), []);
-  const clear = useCallback(() => dispatch({ type: "clear" }), []);
+  const remove = useCallback((id: string) => {
+    dispatch({ type: "remove", id });
+    const product = getProduct(id);
+    if (product) setStatus(`${product.name} removed from cart.`);
+  }, []);
+  const clear = useCallback(() => {
+    dispatch({ type: "clear" });
+    setStatus("Cart cleared.");
+  }, []);
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
 
   useEffect(() => () => { if (confirmTimer.current) clearTimeout(confirmTimer.current); }, []);
-
-  const count = lines.reduce((n, l) => n + l.qty, 0);
 
   const value = useMemo<CartContextValue>(
     () => ({ lines, count, justAdded, isOpen, isHydrated, add, setQty, remove, clear, open, close }),
     [lines, count, justAdded, isOpen, isHydrated, add, setQty, remove, clear, open, close],
   );
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+      <div role="status" aria-live="polite" className="sr-only">
+        {status}
+      </div>
+    </CartContext.Provider>
+  );
 }
 
 export function useCart() {
