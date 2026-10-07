@@ -30,6 +30,8 @@ const ROUTES = [
   "/shop",
   "/shop/power-tools",
   "/product/cordless-drill-18v",
+  "/search?q=cement",
+  "/search?q=definitely-not-a-product",
   "/checkout",
   "/contact",
   "/about",

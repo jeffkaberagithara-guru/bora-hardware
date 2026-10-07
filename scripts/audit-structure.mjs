@@ -4,7 +4,9 @@
  *
  * Runs against the prerendered output in `.next/server/app/*.html`, so it
  * checks what a crawler and a screen reader actually receive rather than what
- * the JSX intended. No browser and no dependencies.
+ * the JSX intended. No browser is launched — except that routes reading
+ * `searchParams` are never prerendered, so those are fetched from a
+ * short-lived `next start` and put through the identical checks.
  *
  * Checked:
  *   - `lang` on <html>
@@ -23,6 +25,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, relative } from "node:path";
+import { ensureServer } from "./lib/headless.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const htmlDir = join(root, ".next", "server", "app");
@@ -87,15 +90,7 @@ const accessibleName = (attrs, inner) => {
 
 /* ------------------------------------------------------------ HTML audit */
 
-const files = walk(htmlDir).filter(
-  (file) => file.endsWith(".html") && !file.endsWith("_global-error.html"),
-);
-
-console.log(`Structure audit: ${files.length} prerendered pages\n`);
-
-for (const file of files) {
-  const where = relative(root, file).replace(/\\/g, "/");
-  const html = readFileSync(file, "utf8");
+function checkHtml(where, html) {
   const before = failures;
 
   if (!/<html\b[^>]*\blang="/i.test(html)) fail(where, "<html> has no lang attribute");
@@ -139,6 +134,44 @@ for (const file of files) {
   }
 
   if (failures === before) pass(where, `${headings.length} headings checked`);
+}
+
+const files = walk(htmlDir).filter(
+  (file) => file.endsWith(".html") && !file.endsWith("_global-error.html"),
+);
+
+console.log(`Structure audit: ${files.length} prerendered pages\n`);
+
+for (const file of files) {
+  checkHtml(relative(root, file).replace(/\\/g, "/"), readFileSync(file, "utf8"));
+}
+
+/* ------------------------------------ HTML audit: server-rendered routes */
+
+/**
+ * Routes that read `searchParams` are never written to `.next/server/app` as
+ * HTML — but they are exactly the pages a crawler and a screen reader receive,
+ * so they are fetched from a live server and put through the same checks.
+ */
+const SERVER_ROUTES = ["/search?q=cement", "/search?q=definitely-not-a-product"];
+
+if (SERVER_ROUTES.length > 0) {
+  console.log(`\nStructure audit: ${SERVER_ROUTES.length} server-rendered routes\n`);
+
+  const { base, child } = await ensureServer(3115);
+  for (const route of SERVER_ROUTES) {
+    try {
+      const response = await fetch(`${base}${route}`);
+      if (!response.ok) {
+        fail(route, `HTTP ${response.status}`);
+        continue;
+      }
+      checkHtml(route, await response.text());
+    } catch (error) {
+      fail(route, `could not fetch — ${error.message}`);
+    }
+  }
+  child?.kill();
 }
 
 /* ------------------------------------------------------- source scan: hex */
