@@ -1,3 +1,4 @@
+import { LocalBusinessJsonLd } from "@/components/seo/local-business";
 import { Hero } from "@/components/home/hero";
 import { TrustStrip } from "@/components/home/trust-strip";
 import { FeaturedProducts } from "@/components/home/featured-products";
@@ -11,6 +12,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 export default function HomePage() {
   return (
     <>
+      <LocalBusinessJsonLd />
       <Hero />
       <TrustStrip />
       <FeaturedProducts />

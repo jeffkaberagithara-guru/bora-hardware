@@ -3,7 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Truck } from "lucide-react";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Breadcrumbs, type Crumb } from "@/components/ui/breadcrumbs";
+import { JsonLd, breadcrumbList } from "@/components/seo/json-ld";
+import { siteConfig } from "@/config/site";
 import { PriceBlock } from "@/components/ui/price-block";
 import { ProductCard } from "@/components/ui/product-card";
 import { ProductGrid } from "@/components/ui/product-grid";
@@ -15,6 +17,8 @@ import { getProduct, products, type Product } from "@/data/products";
 import { soldPer } from "@/lib/currency";
 
 type Params = { id: string };
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://borahardware.co.ke";
 
 export function generateStaticParams(): Params[] {
   return products.map((product) => ({ id: product.id }));
@@ -35,9 +39,18 @@ export async function generateMetadata({
     alternates: { canonical: `/product/${product.id}` },
     openGraph: {
       type: "website",
+      siteName: siteConfig.name,
       title: `${product.name}, ${product.brand}`,
       description: product.description,
+      url: `${siteUrl}/product/${product.id}`,
+      locale: "en_KE",
       images: [{ url: product.image, alt: product.alt }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name}, ${product.brand}`,
+      description: product.description,
+      images: [product.image],
     },
   };
 }
@@ -58,18 +71,55 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
   const category = getCategory(product.categoryId);
   const alsoInStock = related(product);
 
+  const crumbs: Crumb[] = [
+    { label: "Shop", href: "/shop" },
+    ...(category ? [{ label: category.name, href: `/shop/${category.id}` }] : []),
+    { label: product.name },
+  ];
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: `${siteUrl}${product.image}`,
+    sku: product.sku,
+    brand: { "@type": "Brand", name: product.brand },
+    offers: {
+      "@type": "Offer",
+      url: `${siteUrl}/product/${product.id}`,
+      priceCurrency: "KES",
+      price: product.price,
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: product.price,
+        priceCurrency: "KES",
+        unitText: product.unit,
+      },
+      availability:
+        product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+    },
+  };
+
   return (
     <>
+      <JsonLd data={jsonLd} />
+      <JsonLd
+        data={breadcrumbList(
+          [
+            { name: "Home", url: `${siteUrl}/` },
+            ...crumbs.map((crumb) => ({
+              name: crumb.label,
+              ...(crumb.href ? { url: `${siteUrl}${crumb.href}` } : {}),
+            })),
+          ],
+        )}
+      />
       {/* Clearance for the fixed buy bar on mobile when there is no related
           section underneath to absorb it. */}
       <div className={`shell pt-7 md:pt-9 ${alsoInStock.length > 0 ? "pb-10" : "pb-28 lg:pb-10"}`}>
-        <Breadcrumbs
-          items={[
-            { label: "Shop", href: "/shop" },
-            ...(category ? [{ label: category.name, href: `/shop/${category.id}` }] : []),
-            { label: product.name },
-          ]}
-        />
+        <Breadcrumbs items={crumbs} />
 
         <div className="mt-6 grid gap-8 lg:grid-cols-12 lg:gap-10">
           {/* ------------------------------------------------------ photograph */}

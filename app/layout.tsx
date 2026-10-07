@@ -70,10 +70,13 @@ export const metadata: Metadata = {
     locale: "en_KE",
     images: [
       {
-        url: "/img/hero-fundi.jpg",
-        width: 2000,
-        height: 1500,
-        alt: "A craftsperson using a power drill on a timber frame",
+        /* 1200×630, regenerated from app/globals.css tokens + the hero frame by
+           `npm run og`. Social crops by declared ratio, so the ratio has to be
+           the real one — the old 2000×1500 declaration was a lie. */
+        url: "/img/og-cover.jpg",
+        width: 1200,
+        height: 630,
+        alt: `${siteConfig.name} — ${siteConfig.tagline}`,
       },
     ],
   },
@@ -81,7 +84,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${siteConfig.name} — ${siteConfig.tagline}`,
     description: siteConfig.description,
-    images: ["/img/hero-fundi.jpg"],
+    images: ["/img/og-cover.jpg"],
   },
   robots: {
     index: true,
